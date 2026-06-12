@@ -1,13 +1,48 @@
+import { useEffect, useState } from "react";
+import { router } from "expo-router";
 import {
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
   ScrollView,
+  View,
+  ActivityIndicator,
 } from "react-native";
-import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    checkLogin();
+  }, []);
+
+  const checkLogin = async () => {
+    const token = await AsyncStorage.getItem("token");
+    const ownerToken = await AsyncStorage.getItem("ownerToken");
+
+    if (token) {
+      router.replace("/home");
+      return;
+    }
+
+    if (ownerToken) {
+      router.replace("/owner-dashboard");
+      return;
+    }
+
+    setChecking(false);
+  };
+
+  if (checking) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1457D9" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -33,7 +68,10 @@ export default function Index() {
         <Text style={styles.primaryText}>Passenger Login ›</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.ownerButton} onPress={() => {}}>
+      <TouchableOpacity
+        style={styles.ownerButton}
+        onPress={() => router.push("/owner-login")}
+      >
         <Text style={styles.ownerText}>Owner Login ›</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -41,6 +79,12 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#F4F8FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flexGrow: 1,
     backgroundColor: "#F4F8FF",
