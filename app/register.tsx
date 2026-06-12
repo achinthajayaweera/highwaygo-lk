@@ -5,77 +5,184 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  View,
   Alert,
+  View,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
+import API from "../services/api";
 
 export default function Register() {
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [nic, setNic] = useState("");
+  const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
-    if (!name || !email || !password) {
+  const handleRegister = async () => {
+    if (
+      !name.trim() ||
+      !phone.trim() ||
+      !email.trim() ||
+      !nic.trim() ||
+      !address.trim() ||
+      !password ||
+      !confirmPassword
+    ) {
       Alert.alert("Error", "Please fill all fields");
       return;
     }
-    // TODO: connect to API
-    Alert.alert("Info", "Registration coming soon");
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await API.post("/auth/register", {
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        nic: nic.trim(),
+        address: address.trim(),
+        password,
+        confirmPassword,
+      });
+
+      Alert.alert("Success", res.data.message || "Registration successful");
+      router.push("/login");
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Registration failed"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹ Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>
-          Join HighwayGo LK and start booking today.
-        </Text>
-      </View>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      <Image
+        source={require("../assets/images/index-bus.png")}
+        style={styles.heroImage}
+        resizeMode="cover"
+      />
+
+      <Text style={styles.logo}>
+        HighwayGo <Text style={styles.logoBlue}>LK</Text>
+      </Text>
+
+      <Text style={styles.title}>Create Account 🚍</Text>
+
+      <Text style={styles.subtitle}>
+        Register as a passenger and start booking highway buses easily.
+      </Text>
 
       <View style={styles.card}>
-        <Text style={styles.label}>Full Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your name"
-          placeholderTextColor="#8A98AA"
+        <Input
+          label="Full Name"
           value={name}
-          onChangeText={setName}
+          setValue={setName}
+          placeholder="Your full name"
         />
-
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter email"
-          placeholderTextColor="#8A98AA"
-          keyboardType="email-address"
-          autoCapitalize="none"
+        <Input
+          label="Phone Number"
+          value={phone}
+          setValue={setPhone}
+          keyboardType="phone-pad"
+          placeholder="07XXXXXXXX"
+        />
+        <Input
+          label="Email"
           value={email}
-          onChangeText={setEmail}
+          setValue={setEmail}
+          keyboardType="email-address"
+          placeholder="example@email.com"
         />
-
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Create password"
-          placeholderTextColor="#8A98AA"
-          secureTextEntry
+        <Input
+          label="NIC Number"
+          value={nic}
+          setValue={setNic}
+          placeholder="2003XXXXXXX"
+        />
+        <Input
+          label="Address"
+          value={address}
+          setValue={setAddress}
+          placeholder="Your address"
+        />
+        <Input
+          label="Password"
           value={password}
-          onChangeText={setPassword}
+          setValue={setPassword}
+          placeholder="Enter password"
+          secureTextEntry
+        />
+        <Input
+          label="Confirm Password"
+          value={confirmPassword}
+          setValue={setConfirmPassword}
+          placeholder="Confirm password"
+          secureTextEntry
         />
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
-          <Text style={styles.primaryText}>Create Account ›</Text>
+        <TouchableOpacity
+          style={[styles.primaryButton, loading && styles.disabledButton]}
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.primaryText}>Create Account ›</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.outlineButton}
+          onPress={() => router.push("/login")}
+          disabled={loading}
+        >
+          <Text style={styles.outlineText}>Already have an account? Login</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity onPress={() => router.push("/login")}>
-        <Text style={styles.loginLink}>Already have an account? Login</Text>
-      </TouchableOpacity>
     </ScrollView>
+  );
+}
+
+function Input({
+  label,
+  value,
+  setValue,
+  keyboardType = "default",
+  placeholder,
+  secureTextEntry = false,
+}: any) {
+  return (
+    <View>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        style={styles.input}
+        placeholder={placeholder || `Enter ${label}`}
+        placeholderTextColor="#8A98AA"
+        value={value}
+        onChangeText={setValue}
+        keyboardType={keyboardType}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize="none"
+      />
+    </View>
   );
 }
 
@@ -84,31 +191,38 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: "#F4F8FF",
     alignItems: "center",
-    paddingBottom: 30,
-    paddingTop: 60,
+    paddingBottom: 32,
   },
-  header: {
-    width: "90%",
-    marginBottom: 24,
+  heroImage: {
+    width: "100%",
+    height: 220,
+    borderBottomLeftRadius: 38,
+    borderBottomRightRadius: 38,
+    marginBottom: 22,
   },
-  backBtn: {
-    marginBottom: 16,
+  logo: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: "#071A2F",
+    marginBottom: 8,
   },
-  backText: {
-    fontSize: 18,
-    fontWeight: "800",
+  logoBlue: {
     color: "#1457D9",
   },
   title: {
+    color: "#071A2F",
     fontSize: 32,
     fontWeight: "900",
-    color: "#071A2F",
-    marginBottom: 6,
+    textAlign: "center",
   },
   subtitle: {
-    fontSize: 16,
-    color: "#4B5B73",
-    lineHeight: 24,
+    color: "#667085",
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 32,
+    marginTop: 8,
+    marginBottom: 24,
   },
   card: {
     width: "90%",
@@ -130,9 +244,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#D8E2F0",
     borderRadius: 18,
-    padding: 16,
-    marginBottom: 18,
-    fontSize: 16,
+    padding: 15,
+    marginBottom: 16,
+    fontSize: 15,
     color: "#071A2F",
     backgroundColor: "#F8FBFF",
   },
@@ -141,17 +255,27 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 18,
     alignItems: "center",
-    marginTop: 6,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
   primaryText: {
     color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "900",
   },
-  loginLink: {
+  outlineButton: {
+    borderWidth: 1.5,
+    borderColor: "#1457D9",
+    padding: 15,
+    borderRadius: 18,
+    alignItems: "center",
+  },
+  outlineText: {
     color: "#1457D9",
     fontSize: 15,
-    fontWeight: "800",
-    marginTop: 22,
+    fontWeight: "900",
   },
 });
