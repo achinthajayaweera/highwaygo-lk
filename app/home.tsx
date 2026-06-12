@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import API from "../services/api";
@@ -10,6 +11,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Platform,
   Alert,
   Modal,
   FlatList,
@@ -19,6 +21,8 @@ export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [journeyDate, setJourneyDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [passengers, setPassengers] = useState(1);
   const [buses, setBuses] = useState<any[]>([]);
   const [routeModal, setRouteModal] = useState(false);
@@ -88,8 +92,12 @@ export default function Home() {
       Alert.alert("Error", "Please select departure and destination");
       return;
     }
-    // Date and navigation will be wired in v7
-    Alert.alert("Coming soon", `Searching from ${from} to ${to}`);
+
+    router.push(
+      `/buses?from=${from}&to=${to}&date=${
+        journeyDate.toISOString().split("T")[0]
+      }&passengers=${passengers}` as any
+    );
   };
 
   return (
@@ -176,12 +184,20 @@ export default function Home() {
 
           {/* Date + Passengers */}
           <View style={styles.grid}>
-            <View style={styles.infoBox}>
+
+            {/* Date picker box */}
+            <TouchableOpacity
+              style={styles.infoBox}
+              onPress={() => setShowDatePicker(true)}
+            >
               <Text style={styles.boxIcon}>📅</Text>
               <Text style={styles.infoLabel}>Journey Date</Text>
-              <Text style={styles.infoValue}>{new Date().toDateString()}</Text>
-            </View>
+              <Text style={styles.infoValue}>
+                {journeyDate.toDateString()}
+              </Text>
+            </TouchableOpacity>
 
+            {/* Passenger counter */}
             <View style={styles.passengerBox}>
               <Text style={styles.boxIcon}>👤</Text>
               <Text style={styles.infoLabel}>Passengers</Text>
@@ -203,6 +219,23 @@ export default function Home() {
             </View>
           </View>
 
+          {/* Date Picker */}
+          {showDatePicker && (
+            <DateTimePicker
+              value={journeyDate}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              minimumDate={new Date()}
+              themeVariant="light"
+              textColor="#071A2F"
+              accentColor="#1457D9"
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) setJourneyDate(selectedDate);
+              }}
+            />
+          )}
+
           {/* Search Button */}
           <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
             <Text style={styles.searchText}>🔍 Search Buses</Text>
@@ -221,7 +254,7 @@ export default function Home() {
       {/* Bottom Nav */}
       <View style={styles.bottomNav}>
         <NavItem icon="🏠" label="Home" active onPress={() => router.push("/home")} />
-        <NavItem icon="🎫" label="Bookings" onPress={() => {}} />
+        <NavItem icon="🎫" label="Bookings" onPress={() => router.push("/my-bookings" as any)} />
         <NavItem icon="🏷️" label="Offers" onPress={() => {}} />
         <NavItem icon="👤" label="Profile" onPress={() => router.push("/profile" as any)} />
       </View>
@@ -294,14 +327,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  logo: {
-    fontSize: 24,
-    fontWeight: "900",
-    color: "#071A2F",
-  },
-  logoBlue: {
-    color: "#1457D9",
-  },
+  logo: { fontSize: 24, fontWeight: "900", color: "#071A2F" },
+  logoBlue: { color: "#1457D9" },
   bell: { fontSize: 24 },
   heroImage: {
     width: "100%",
@@ -316,15 +343,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  greeting: {
-    fontSize: 26,
-    fontWeight: "900",
-    color: "#071A2F",
-  },
-  subGreeting: {
-    color: "#667085",
-    marginTop: 5,
-  },
+  greeting: { fontSize: 26, fontWeight: "900", color: "#071A2F" },
+  subGreeting: { color: "#667085", marginTop: 5 },
   profileCircle: {
     width: 48,
     height: 48,
@@ -357,11 +377,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  infoLabel: {
-    color: "#667085",
-    fontSize: 12,
-    fontWeight: "700",
-  },
+  infoLabel: { color: "#667085", fontSize: 12, fontWeight: "700" },
   locationText: {
     color: "#071A2F",
     fontSize: 18,
@@ -379,11 +395,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5EAF2",
     marginVertical: 16,
   },
-  grid: {
-    flexDirection: "row",
-    gap: 14,
-    marginTop: 4,
-  },
+  grid: { flexDirection: "row", gap: 14, marginTop: 4 },
   infoBox: {
     flex: 1,
     backgroundColor: "#F8FBFF",
@@ -396,10 +408,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 15,
   },
-  boxIcon: {
-    fontSize: 22,
-    marginBottom: 8,
-  },
+  boxIcon: { fontSize: 22, marginBottom: 8 },
   counterRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -414,16 +423,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  counterText: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "900",
-  },
-  passengerCount: {
-    color: "#071A2F",
-    fontSize: 20,
-    fontWeight: "900",
-  },
+  counterText: { color: "#FFFFFF", fontSize: 20, fontWeight: "900" },
+  passengerCount: { color: "#071A2F", fontSize: 20, fontWeight: "900" },
   searchButton: {
     backgroundColor: "#1457D9",
     padding: 16,
@@ -431,11 +432,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 18,
   },
-  searchText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "900",
-  },
+  searchText: { color: "#FFFFFF", fontSize: 17, fontWeight: "900" },
   sectionTitle: {
     color: "#071A2F",
     fontSize: 22,
@@ -454,20 +451,9 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: "center",
   },
-  featureIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  featureTitle: {
-    color: "#071A2F",
-    fontWeight: "900",
-    fontSize: 14,
-  },
-  featureText: {
-    color: "#667085",
-    fontSize: 12,
-    marginTop: 4,
-  },
+  featureIcon: { fontSize: 28, marginBottom: 8 },
+  featureTitle: { color: "#071A2F", fontWeight: "900", fontSize: 14 },
+  featureText: { color: "#667085", fontSize: 12, marginTop: 4 },
   bottomNav: {
     position: "absolute",
     bottom: 0,
@@ -482,16 +468,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
   },
   navItem: { alignItems: "center" },
-  navIcon: {
-    fontSize: 22,
-    opacity: 0.55,
-  },
+  navIcon: { fontSize: 22, opacity: 0.55 },
   navIconActive: { fontSize: 24 },
-  navText: {
-    color: "#667085",
-    fontSize: 12,
-    marginTop: 4,
-  },
+  navText: { color: "#667085", fontSize: 12, marginTop: 4 },
   navTextActive: {
     color: "#1457D9",
     fontSize: 12,
@@ -522,11 +501,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginBottom: 12,
   },
-  routeItemText: {
-    color: "#071A2F",
-    fontSize: 17,
-    fontWeight: "900",
-  },
+  routeItemText: { color: "#071A2F", fontSize: 17, fontWeight: "900" },
   emptyRoute: {
     color: "#667085",
     textAlign: "center",
@@ -540,9 +515,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
   },
-  closeText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "900",
-  },
+  closeText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
 });
