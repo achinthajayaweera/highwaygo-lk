@@ -8,20 +8,42 @@ import {
   ScrollView,
   Image,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import API from "../services/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill all fields");
       return;
     }
-    // TODO: connect to API
-    Alert.alert("Info", "Login coming soon");
+
+    setLoading(true);
+    try {
+      const response = await API.post("/auth/login", { email, password });
+      await AsyncStorage.setItem("token", response.data.token);
+
+      Alert.alert("Success", "Login successful");
+      router.push("/home");
+    } catch (error: any) {
+      console.log("LOGIN ERROR:", error.response?.data || error.message);
+      Alert.alert(
+        "Login Failed",
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          "Login failed"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,9 +55,7 @@ export default function Login() {
       />
 
       <Text style={styles.logo}>HighwayGo LK</Text>
-
       <Text style={styles.title}>Welcome Back 👋</Text>
-
       <Text style={styles.subtitle}>
         Login to book your highway journey across Sri Lanka.
       </Text>
@@ -62,8 +82,16 @@ export default function Login() {
           onChangeText={setPassword}
         />
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-          <Text style={styles.primaryText}>Passenger Login ›</Text>
+        <TouchableOpacity
+          style={[styles.primaryButton, loading && styles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.primaryText}>Passenger Login ›</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -74,7 +102,7 @@ export default function Login() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={() => {}}>
+      <TouchableOpacity onPress={() => router.push("/owner-login")}>
         <Text style={styles.ownerLink}>Login as Bus Owner</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -148,6 +176,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 6,
     marginBottom: 12,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   primaryText: {
     color: "#FFFFFF",
