@@ -16,6 +16,7 @@ export default function RootLayout() {
         <Stack.Screen name="booking-success" options={{ headerShown: false }} />
         <Stack.Screen name="my-bookings" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
+        <Stack.Screen name="live-track" options={{ headerShown: false }} />
         <Stack.Screen name="owner-login" options={{ headerShown: false }} />
         <Stack.Screen name="owner-dashboard" options={{ headerShown: false }} />
       </Stack>
