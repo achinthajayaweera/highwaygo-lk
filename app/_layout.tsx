@@ -11,6 +11,7 @@ export default function RootLayout() {
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="buses" options={{ headerShown: false }} />
+        <Stack.Screen name="seat-selection" options={{ headerShown: false }} />
         <Stack.Screen name="my-bookings" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="owner-login" options={{ headerShown: false }} />
