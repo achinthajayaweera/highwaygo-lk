@@ -20,6 +20,10 @@ export default function RootLayout() {
         <Stack.Screen name="owner-login" options={{ headerShown: false }} />
         <Stack.Screen name="owner-register" options={{ headerShown: false }} />
         <Stack.Screen name="owner-dashboard" options={{ headerShown: false }} />
+        <Stack.Screen name="add-bus" options={{ headerShown: false }} />
+        <Stack.Screen name="manage-buses" options={{ headerShown: false }} />
+        <Stack.Screen name="owner-bookings" options={{ headerShown: false }} />
+        <Stack.Screen name="owner-profile" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </>
